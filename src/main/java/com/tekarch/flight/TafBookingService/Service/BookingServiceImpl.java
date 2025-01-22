@@ -22,9 +22,9 @@ public class BookingServiceImpl implements BookingService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String DATASOURCE_URL = "http://localhost:8081/bookings";
-    private static final String FLIGHT_URL = "http://localhost:8081/flights/";
-    private static final String USER_DATASOURCE_URL ="http://localhost:8081/users/";
+    private static final String DATASOURCE_URL = "http://18.188.81.176:8081/bookings";
+    private static final String FLIGHT_URL = "http://18.188.81.176:8081/flights/";
+    private static final String USER_DATASOURCE_URL ="http://18.188.81.176:8081/users/";
 
     @Override
     public Booking createBooking(Long userId, Long flightId) {
