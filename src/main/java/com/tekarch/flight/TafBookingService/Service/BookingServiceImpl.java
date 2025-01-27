@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -53,7 +54,6 @@ public class BookingServiceImpl implements BookingService {
         logger.info("Booking - "+booking.getUser().getId());
         logger.info("Booking - "+ booking.getFlight().getId());
 
-
         // Reduce available seats after booking
         flight.setAvailableSeats(flight.getAvailableSeats() - 1);
         restTemplate.put(FLIGHT_URL + flightId, flight);  // Update the available seats in flight
@@ -73,13 +73,13 @@ public class BookingServiceImpl implements BookingService {
         String getBookingurl= DATASOURCE_URL + "/" + bookingId;
         return restTemplate.getForObject(getBookingurl, Booking.class);
     }
-
-//    @Override
-//    public List<Booking> getBookingsByUserId(Long userId) {
-//        // Get bookings by user ID
-//        String getBookinguser= DATASOURCE_URL + "/" ;
-//        return restTemplate.getForObject(getBookinguser + "user/" + userId, List.class);
-//    }
+    // Get bookings by user ID
+    @Override
+    public List<Booking> getBookingsByUserId(Long userId) {
+        String  getBookingbyUserId = DATASOURCE_URL + "/user/" + userId;
+        Booking[] bookings= restTemplate.getForObject(getBookingbyUserId, Booking[].class);
+        return Arrays.asList(bookings);
+    }
 
     @Override
     public void cancelBooking(Long bookingId) {
