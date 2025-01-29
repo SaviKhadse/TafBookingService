@@ -1,6 +1,6 @@
 package com.tekarch.flight.TafBookingService.Service;
 
-import com.tekarch.flight.TafBookingService.Controller.BookingController;
+//import com.tekarch.flight.TafBookingService.Controller.BookingController;
 import com.tekarch.flight.TafBookingService.Model.Booking;
 import com.tekarch.flight.TafBookingService.Model.Flight;
 import com.tekarch.flight.TafBookingService.Model.User;
@@ -8,6 +8,7 @@ import com.tekarch.flight.TafBookingService.Service.Interface.BookingService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,9 +24,18 @@ public class BookingServiceImpl implements BookingService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String DATASOURCE_URL = "http://18.188.81.176:8081/bookings";
-    private static final String FLIGHT_URL = "http://18.188.81.176:8081/flights/";
-    private static final String USER_DATASOURCE_URL ="http://18.188.81.176:8081/users/";
+    @Value("${booking.ms.url}")
+    String bookingssurl;
+
+    @Value("${flights.ms.url}")
+    String flightsurl;
+
+    @Value("${users.ms.url}")
+    String usersurl;
+
+//    private static final String DATASOURCE_URL = "http://localhost:8081/bookings";
+//    private static final String FLIGHT_URL = "http://localhost:8081/flights/";
+//    private static final String USER_DATASOURCE_URL ="http://localhost:8081/users/";
 
     @Override
     public Booking createBooking(Long userId, Long flightId) {
@@ -33,8 +43,8 @@ public class BookingServiceImpl implements BookingService {
 //        System.out.println(userId);
         logger.info("userId"+ userId);
 
-        Flight flight = restTemplate.getForObject(FLIGHT_URL + flightId, Flight.class);
-        User user= restTemplate.getForObject(USER_DATASOURCE_URL + userId, User.class);
+        Flight flight = restTemplate.getForObject(flightsurl +"/"+ flightId, Flight.class);
+        User user= restTemplate.getForObject(usersurl +"/"+ userId, User.class);
         if (flight == null) {
             throw new IllegalArgumentException("Flight not available");
         }
@@ -56,9 +66,9 @@ public class BookingServiceImpl implements BookingService {
 
         // Reduce available seats after booking
         flight.setAvailableSeats(flight.getAvailableSeats() - 1);
-        restTemplate.put(FLIGHT_URL + flightId, flight);  // Update the available seats in flight
+        restTemplate.put(flightsurl +"/"+ flightId, flight);  // Update the available seats in flight
         logger.info("Booking object"+booking.toString());
-        Booking savedBooking = restTemplate.postForObject(DATASOURCE_URL, booking, Booking.class);
+        Booking savedBooking = restTemplate.postForObject(bookingssurl, booking, Booking.class);
 
         logger.info("saved booking"+savedBooking);
 
@@ -70,13 +80,13 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking getBookingById(Long bookingId) {
         // Get booking by ID
-        String getBookingurl= DATASOURCE_URL + "/" + bookingId;
+        String getBookingurl= bookingssurl + "/" + bookingId;
         return restTemplate.getForObject(getBookingurl, Booking.class);
     }
     // Get bookings by user ID
     @Override
     public List<Booking> getBookingsByUserId(Long userId) {
-        String  getBookingbyUserId = DATASOURCE_URL + "/user/" + userId;
+        String  getBookingbyUserId = bookingssurl + "/user/" + userId;
         Booking[] bookings= restTemplate.getForObject(getBookingbyUserId, Booking[].class);
         return Arrays.asList(bookings);
     }
@@ -84,7 +94,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void cancelBooking(Long bookingId) {
         // Cancel booking and update status
-        String deleteBookingUrl= DATASOURCE_URL + "/" + bookingId;
+        String deleteBookingUrl= bookingssurl + "/" + bookingId;
         Booking booking = restTemplate.getForObject(deleteBookingUrl, Booking.class);
 
         if (booking != null) {
@@ -92,10 +102,10 @@ public class BookingServiceImpl implements BookingService {
 //            booking.setUpdatedAt(LocalDateTime.now());
 
             // Restore available seat count
-            Flight flight = restTemplate.getForObject(FLIGHT_URL + booking.getFlight().getId(), Flight.class);
+            Flight flight = restTemplate.getForObject(flightsurl +"/"+ booking.getFlight().getId(), Flight.class);
             if (flight != null) {
                 flight.setAvailableSeats(flight.getAvailableSeats() + 1);
-                restTemplate.put(FLIGHT_URL + booking.getFlight().getId(), flight);
+                restTemplate.put(flightsurl +"/" + booking.getFlight().getId(), flight);
             }
 
             // Update booking status in the datastore service

@@ -20,6 +20,7 @@ public class BookingController {
     private BookingService bookingService;
 
     // Endpoint to create a new booking
+    @CrossOrigin(origins="*")
     @PostMapping
     public ResponseEntity<Booking> createBooking(@RequestParam("uid") Long uid, @RequestParam("fid") Long fid) {
 //        logger.warn("hello");
